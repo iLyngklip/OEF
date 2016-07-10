@@ -10,7 +10,8 @@
  *		1:		_enemySpawn			- Where should they be spawned? (array)
  *		2:		_squadTypes			- Types of squads to choose from (array)
  * 		3: 		_distanceToSpawn 	- Maximum distance to spawn away from the marker
- *		4:		_waypointType			- Waypoint type
+ *		4:		_waypointType		- Waypoint type
+ *		5:		_whereToAttack		- Where to set the attack waypoint
  *
  *
  *	RETURNS:
@@ -19,7 +20,7 @@
 
 
 // Get parameters
-params ["_nrOfEnemies", "_enemySpawn", "_squadTypes", "_distanceToSpawn", "_waypointType"];
+params ["_nrOfEnemies", "_enemySpawn", "_squadTypes", "_distanceToSpawn", "_waypointType", "_whereToAttack"];
 
 // Array to store the squads in
 private "_spawnedSquads";
@@ -40,22 +41,32 @@ if(_nrOfEnemies > 0) then {
 	for "i" from 0 to _nrOfEnemies - 1 do
 	{
 		_squadToSpawn = floor random 4;
-		_placeToSpawn = floor random (count _enemySpawn);
+		_tempGroup = 0;
+		if(_enemySpawn isEqualType []) then 
+		{
+			_placeToSpawn = floor random (count _enemySpawn);
 
-
-		// _enemySquads pushBack [_enemySpawnMarkers select _placeToSpawn, resistance, (_squadTypes select 2) ] Call BIS_fnc_spawnGroup;
-		// [getMarkerPos (_enemySpawn select _placeToSpawn), resistance, (configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Support_section")] Call BIS_fnc_spawnGroup;
-		_tempGroup = [getMarkerPos (_enemySpawn select _placeToSpawn), resistance, _squadTypes select _squadToSpawn] Call BIS_fnc_spawnGroup;
-		_spawnedSquads set [i, _tempGroup];
+			_tempGroup = [getMarkerPos (_enemySpawn select _placeToSpawn), resistance, _squadTypes select _squadToSpawn] Call BIS_fnc_spawnGroup;
+			_spawnedSquads set [i, _tempGroup];
+		} else 
+		{
+			_tempGroup = [getMarkerPos _enemySpawn, resistance, _squadTypes select _squadToSpawn] Call BIS_fnc_spawnGroup;
+			_spawnedSquads set [i, _tempGroup];
+		};
+		
 		
 		if(_waypointType isEqualTo "PATROL") then {
 			_angle = random 360;
 			_randomPlaceToSpawn = [(getMarkerPos (_enemySpawn select _placeToSpawn) select 0) + (_distanceToSpawn * cos _angle), (getMarkerPos (_enemySpawn select _placeToSpawn) select 1) + (_distanceToSpawn * sin _angle)];
 			[_tempGroup, _randomPlaceToSpawn, 200, 15] call CBA_fnc_taskPatrol;
-		} else if (_waypointType isEqualTo "ATTACK") then 
-		{
-			
 		} else 
+		{ 
+			if (_waypointType isEqualTo "ATTACK") then 
+			{
+				// Make attack waypoint for the enemies
+				[_tempGroup, _whereToAttack, 100] call CBA_fnc_taskAttack;
+				
+			} else 
 			{
 				// Creating tasks for the AI
 				_grpTask = floor random 2;
@@ -79,8 +90,8 @@ if(_nrOfEnemies > 0) then {
 					
 				
 				};
-			}
-			
+			};
+		};	
 	};
 	_spawnedSquads;
 };	

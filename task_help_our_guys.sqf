@@ -62,7 +62,11 @@ _actualTaskPos = getMarkerPos _taskDest;
 _taskVar = [west, [_task], [_taskDescL, _taskTitle],   _actualTaskPos, _taskState, 1] call bis_fnc_taskCreate;
  
  // Spawn our units
- _InfSquad1 = [_actualTaskPos, west, (configFile >> "CfgGroups" >> "West" >> "rhs_faction_usmc_d" >> "rhs_group_nato_usmc_d_infantry" >> "rhs_group_nato_usmc_d_infantry_team")] Call BIS_fnc_spawnGroup;
+ _ourSquad = [_actualTaskPos, west, (configFile >> "CfgGroups" >> "West" >> "rhs_faction_usmc_d" >> "rhs_group_nato_usmc_d_infantry" >> "rhs_group_nato_usmc_d_infantry_team")] Call BIS_fnc_spawnGroup;
+ //_ourSquad set[0, _tempSquad];
+ 
+ // Add DEFEND waypoint, so they take cover
+ [_ourSquad, _actualTaskPos, 50, 1, false] call CBA_fnc_taskDefend;
  // rhs_group_nato_usmc_d_infantry_team
  
  
@@ -73,10 +77,10 @@ _squadTypes = [	(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" 
 				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_AT_section"),
 				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Patrol_section")];
  
- _spawnedSquads = [nrOfEnemySquadsForAssist, _enemySpawn, _squadTypes, 100, false] call compile preprocessFileLineNumbers "Basic_Functions\spawnEnemies.sqf";
+ _spawnedSquads = [nrOfEnemySquadsForAssist, _enemySpawn, _squadTypes, 100, "ATTACK", _actualTaskPos] call compile preprocessFileLineNumbers "Basic_Functions\spawnEnemies.sqf";
  
  
- 
+ /* OUTDATED!
 // Spawn the enemy units!
 if(nrOfEnemySquadsForAssist > 0) then {
 	// Spawn enemies, if parameter says so
@@ -98,53 +102,83 @@ if(nrOfEnemySquadsForAssist > 0) then {
 		}
 	};
 };
+ */
  
- 
- 
- /* OUTDATED!
- // Spawn the enemy group
- _InfSquad2 = [(getMarkerPos _enemySpawn1), resistance, (configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Support_section")] Call BIS_fnc_spawnGroup;
-	// LOP_AM_Support_section
-	// LOP_AM_Rifle_squad
-	// LOP_AM_AT_section
-	// LOP_AM_Patrol_section
 
-	// Make waypoints for the groups
-	_wp = _InfSquad2 addWaypoint [[getMarkerPos _taskDest select 0, getMarkerPos _taskDest select 1], 0];
-	_wp setWaypointType "MOVE";
-	_wp setWaypointStatements ["True", ""];
+// Create a trigger to check if task completed
+_trig = createTrigger ["EmptyDetector", _actualTaskPos];
+_trig setTriggerType "NONE";
+_trig setTriggerActivation ["WEST", "PRESENT", false];
+_trig setTriggerArea [200, 200, 0, false];
+_trig setTriggerTimeout [80, 80, 80, false];
+_trig setTriggerStatements ["this", "", ""];
 
-*/	
+// Create a trigger to check if task completed
+_trig2 = createTrigger ["EmptyDetector", _actualTaskPos];
+_trig2 setTriggerType "NONE";
+_trig2 setTriggerActivation ["EAST", "NOT PRESENT", false];
+_trig2 setTriggerArea [1200, 1200, 0, false];
+_trig2 setTriggerTimeout [80, 80, 80, false];
+_trig2 setTriggerStatements ["this", "", ""];
+
+
+while {(triggerActivated _trig) && !(triggerActivated _trig2)} do 
+{ 	
+	// Now we wait for the trigger to fire
+	sleep(10);
+};
+
+if((triggerActivated _trig) && (triggerActivated _trig2)) then 
+{
+	[_task, "SUCCEEDED", true] spawn BIS_fnc_taskSetState;
+	_shallWeStillCheck = false;
+	doWeHaveATask = false;
+	publicVariable "doWeHaveATask";
+	tasksDone = tasksDone + 1;
+
+} else {
+		[_task, "Failed", true] spawn BIS_fnc_taskSetState;
+		_shallWeStillCheck = false;
+		doWeHaveATask = false;
+		publicVariable "doWeHaveATask";
+		tasksDone = tasksDone + 1;
+};	
 	
-	// Control structure
-	// This checks if the task is completed0
-	_shallWeStillCheck = true;
-	while {_shallWeStillCheck} do {
-		
-		if(({alive _x} count units _InfSquad2) < 1) then {
-			[_task, "SUCCEEDED", true] spawn BIS_fnc_taskSetState;
-			_shallWeStillCheck = false;
-			doWeHaveATask = false;
-			publicVariable "doWeHaveATask";
-			tasksDone = tasksDone + 1;
+	
+	/*
+	
+// Control structure
+// This checks if the task is completed
+_shallWeStillCheck = true;
+while {_shallWeStillCheck} do {
+	
+	// Check if the enemies are alive
+	for "i" from 0 to (count _spawnedSquads) do 
+	{
+		if(({alive _x} count units (_spawnedSquads select i)) < 1) then {
+			
 		};
 		
-		if(({alive _x} count units _InfSquad1) < 1) then {
+	}; // for
+	
+	// for "i" from 0 to (count _ourSquad) - 1 do 
+	// {
+		if(({alive _x} count units (_ourSquad)) < 1) then {
 			[_task, "Failed", true] spawn BIS_fnc_taskSetState;
 			_shallWeStillCheck = false;
 			doWeHaveATask = false;
 			publicVariable "doWeHaveATask";
 			tasksDone = tasksDone + 1;
-		};
-		
-		
-		sleep(20);
-		
-	}; 
+		}; // if
+	// }; // for
+	
+	sleep(20);
+	
+}; 
+
  
  
- 
- 
+ */
  
  
  
