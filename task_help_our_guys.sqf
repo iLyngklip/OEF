@@ -83,7 +83,7 @@ for "i" from 0 to nrOfEnemySquadsForAssist - 1 do
 	_spawnedSquads set [i, _tempSquad];
 };
 
-systemChat str(_spawnedSquads);
+// systemChat str(_spawnedSquads);
  
  
  /* OUTDATED!

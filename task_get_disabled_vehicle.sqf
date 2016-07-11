@@ -41,14 +41,21 @@ params ["_tskTitle", "_tskDescL", "_tskDest", "_tskState","_tskStart", "_enemySp
 
 
 // Now we need to rename the parameters to variables we can use
-_taskTitle 		= _this select 0;
-_taskDescL		= _this select 1;
-_taskDest		= _this select 2;
-_taskState		= _this select 3;
-_taskStartPos	= _this select 4;
-_enemySpawn1 	= _this select 5;
-_enemySpawn2	= _this select 6;
+_taskTitle 				= _this select 0;
+_taskDescL				= _this select 1;
+_taskDest				= _this select 2;
+_taskState				= _this select 3;
+_taskVehicleStartPos	= _this select 4;
+_enemySpawn 			= _this select 5;
 
+_spawnedSquads = [];
+_distanceToSpawnWaypoint = 100;
+
+// Make an array with the squad types:
+_squadTypes = [	(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Support_section"),
+				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Rifle_squad"),
+				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_AT_section"),
+				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Patrol_section")];
 
 // Setting up the local task var
 _task 		= "task_" + str(tasksDone);
@@ -62,11 +69,11 @@ publicVariable "doWeHaveATask";
 
 // Converting Markers to coordinates
 _taskEndPos = getMarkerPos _taskDest;
-_posOfCar 	= getMarkerPos _taskStartPos;
+_posOfCar 	= getMarkerPos _taskVehicleStartPos;
 
 // Creating the task
-_parrentTaskVar = [west, [_task], [_taskDescL, _taskTitle], _taskStartPos, _taskState, 1, false] call bis_fnc_taskCreate;
-_childTaskVar1 = [west, [_task_out, _parrentTaskVar], ["", "Get to the vehicle"], _taskStartPos, _taskState, 1] call bis_fnc_taskCreate;
+_parrentTaskVar 	= [west, [_task], [_taskDescL, _taskTitle], _taskVehicleStartPos, _taskState, 1, false] call bis_fnc_taskCreate;
+_childTaskToVehicle = [west, [_task_out, _parrentTaskVar], ["", "Get to the vehicle"], _taskVehicleStartPos, _taskState, 1] call bis_fnc_taskCreate;
 
 // Spawning the vehicle to TOW, and setting damage states
 _objectToTransport = "rhsusf_m1025_d_s" createVehicle _posOfCar;
@@ -75,10 +82,95 @@ _objectToTransport setHit [getText(configFile >> "cfgVehicles" >> "rhsusf_m1025_
 _objectToTransport setFuel 0;
 
 
+
+
+
+
+
+
 // Spawn the enemy units!
 if(nrOfEnemySquadsForTowing > 0) then {
 	// Spawn enemies, if parameter says so
-	for "i" from 1 to nrOfEnemySquadsForTowing do
+	for "i" from 1 to nrOfEnemySquadsForTowing - 1 do
+	{
+		_squadToSpawn = floor random 4;
+		_tempGroup = 0;
+		
+		// Spawning the group
+		if(_enemySpawn isEqualType []) then 
+		{
+			_placeToSpawn = floor random (count _enemySpawn);
+
+			_tempGroup = [getMarkerPos (_enemySpawn select _placeToSpawn), resistance, _squadTypes select _squadToSpawn] Call BIS_fnc_spawnGroup;
+			// systemChat format["[spawnEnemies] - _tempGroup: %1", _tempGroup];
+			_spawnedSquads set [i, _tempGroup];
+			
+			// Creating tasks for the AI
+			_grpTask = floor random 2;
+			switch (_grpTask) do{
+				// DEFEND waypoint
+				case 0:
+				{	
+					_angle = random 360;
+					_randomPlaceToSpawnWaypoint = [(getMarkerPos (_enemySpawn select _placeToSpawn) select 0) + (_distanceToSpawnWaypoint * cos _angle), (getMarkerPos (_enemySpawn select _placeToSpawn) select 1) + (_distanceToSpawnWaypoint * sin _angle)];
+					
+					[_tempGroup, _randomPlaceToSpawnWaypoint, 100, 2, true] call CBA_fnc_taskDefend;
+				};
+				
+				// PATROL
+				case 1:
+				{
+					_angle = random 360;
+					_randomPlaceToSpawnWaypoint = [(getMarkerPos (_enemySpawn select _placeToSpawn) select 0) + (_distanceToSpawnWaypoint * cos _angle), (getMarkerPos (_enemySpawn select _placeToSpawn) select 1) + (_distanceToSpawnWaypoint * sin _angle)];
+					[_tempGroup, _randomPlaceToSpawnWaypoint, 200, 15] call CBA_fnc_taskPatrol;
+				};
+				
+			
+			};
+		} else 
+		{
+			_tempGroup = [getMarkerPos _enemySpawn, resistance, _squadTypes select _squadToSpawn] Call BIS_fnc_spawnGroup;
+			_spawnedSquads set [i, _tempGroup];
+			// Creating tasks for the AI
+			_grpTask = floor random 2;
+			switch (_grpTask) do{
+				// DEFEND waypoint
+				case 0:
+				{	
+					_angle = random 360;
+					_randomPlaceToSpawnWaypoint = [(getMarkerPos (_enemySpawn) select 0) + (_distanceToSpawnWaypoint * cos _angle), (getMarkerPos (_enemySpawn) select 1) + (_distanceToSpawnWaypoint * sin _angle)];
+					
+					[_tempGroup, _randomPlaceToSpawnWaypoint, 100, 2, true] call CBA_fnc_taskDefend;
+				};
+				
+				// PATROL
+				case 1:
+				{
+					_angle = random 360;
+					_randomPlaceToSpawnWaypoint = [(getMarkerPos (_enemySpawn) select 0) + (_distanceToSpawnWaypoint * cos _angle), (getMarkerPos (_enemySpawn) select 1) + (_distanceToSpawnWaypoint * sin _angle)];
+					[_tempGroup, _randomPlaceToSpawnWaypoint, 200, 15] call CBA_fnc_taskPatrol;
+				};
+				
+			
+			};
+		};
+		
+		
+		
+	};
+};
+
+
+
+
+
+
+
+/* BACKUP
+// Spawn the enemy units!
+if(nrOfEnemySquadsForTowing > 0) then {
+	// Spawn enemies, if parameter says so
+	for "i" from 1 to nrOfEnemySquadsForTowing - 1 do
 	{
 		if (i % 2 == 0) then {
 			_InfSquad2 = [(getMarkerPos _enemySpawn1), resistance, (configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Support_section")] Call BIS_fnc_spawnGroup;
@@ -97,7 +189,7 @@ if(nrOfEnemySquadsForTowing > 0) then {
 	};
 };
 
-
+*/
 
 
 
@@ -224,11 +316,14 @@ switch(_switchVal) do
 	
 	sleep(120);
 	
+	// Despawn the vehicle
 	{
 		_x action ["Eject", _objectToTransport];
 	} forEach crew _objectToTransport;
 	deleteVehicle _objectToTransport;
-
+	
+	// Despawn the remaining enemy units
+	[_spawnedSquads] call compile preprocessFileLineNumbers "Basic_Functions\deSpawnEnemies.sqf";
 
 
 

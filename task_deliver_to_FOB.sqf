@@ -37,7 +37,7 @@
  *				_nah = ["Title", "DeskL", "DeskS", "HER ER MAD!", [0, 0, 0], this, "ASSIGNED"] execVM "createTask.sqf";
  */
 
-params ["_tskTitle", "_tskDescL", "_tskDest", "_tskState","_tskStart", "_enemySpawn1", "_enemySpawn2"];		// Getting the passed parameters
+params ["_tskTitle", "_tskDescL", "_tskDest", "_tskState","_tskStart", "_enemySpawn"];		// Getting the passed parameters
 
 
 // Now we need to rename the parameters to variables we can use
@@ -46,8 +46,17 @@ _taskDescL		= _this select 1;
 _taskDest		= _this select 2;
 _taskState		= _this select 3;
 _taskStart		= _this select 4;
-_enemySpawn1 	= _this select 5;
-_enemySpawn2	= _this select 6;
+_enemySpawn 	= _this select 5;
+
+
+_spawnedSquads = [];
+_distanceToSpawnWaypoint = 100;
+
+// Make an array with the squad types:
+_squadTypes = [	(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Support_section"),
+				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Rifle_squad"),
+				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_AT_section")];
+
 
 // Setting up the local task var
 _task = "task_" + str(tasksDone);
@@ -71,91 +80,152 @@ switch(_switchVal) do
 	case 0: 
 	{
 		_objectToTransport = "B_Slingload_01_Cargo_F" createVehicle getMarkerPos _taskStart;
-		hint "it works!";
 	};
 
 	case 1:
 	{
 		_objectToTransport = "rhsusf_m1025_d_s" createVehicle getMarkerPos _taskStart;
-		hint "it works!";
 	};
 
 	case 2:
 	{
 		_objectToTransport = "CargoNet_01_barrels_F" createVehicle getMarkerPos _taskStart;
-		hint "it works!";
 	};
 
 	case 3:
 	{
 		_objectToTransport = "CargoNet_01_box_F" createVehicle getMarkerPos _taskStart;
-		hint "it works!";
 	};
 
 	case 4:
 	{
 		_objectToTransport = "B_Slingload_01_Fuel_F" createVehicle getMarkerPos _taskStart;
-		hint "it works!";
 	};
 	
 	default
 	{
-	hint "it does not work";
-	}
+	
+	};
 };
 
 
+// Creating a marker for players to see, so they can find the cargo to transport
+_cargoMarker = createMarker ["Cargo", position _objectToTransport];
+_cargoMarker setMarkerShape "ICON";
+_cargoMarker setMarkerType "hd_objective";
+_cargoMarker setMarkerColor "ColorGreen";
+_cargoMarker setMarkerText "Cargo";
 
-// _nrOfSquads = paramsArray select 2;
+
+
+
 // Spawn the enemy units!
 if(nrOfEnemySquadsForTransport > 0) then {
 	// Spawn enemies, if parameter says so
-	for "i" from 1 to nrOfEnemySquadsForTransport do
+	for "i" from 1 to nrOfEnemySquadsForTransport - 1 do
 	{
-		if (i % 2 == 0) then {
-			_InfSquad2 = [(getMarkerPos _enemySpawn1), resistance, (configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Support_section")] Call BIS_fnc_spawnGroup;
+		_squadToSpawn = floor random count _squadTypes;
+		_tempGroup = 0;
 		
-			_wp = _InfSquad2 addWaypoint [[getMarkerPos _taskDest select 0, getMarkerPos _taskDest select 1], 0];
-			_wp setWaypointType "MOVE";
-			_wp setWaypointStatements ["True", ""];
+		// Spawning the group
+		if(_enemySpawn isEqualType []) then 
+		{
+			_placeToSpawn = floor random (count _enemySpawn);
+
+			_tempGroup = [getMarkerPos (_enemySpawn select _placeToSpawn), resistance, _squadTypes select _squadToSpawn] Call BIS_fnc_spawnGroup;
+			// systemChat format["[spawnEnemies] - _tempGroup: %1", _tempGroup];
+			_spawnedSquads set [i, _tempGroup];
 			
-		} else {
-			_InfSquad2 = [(getMarkerPos _enemySpawn1), resistance, (configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Rifle_squad")] Call BIS_fnc_spawnGroup;
-		
-			_wp = _InfSquad2 addWaypoint [[getMarkerPos _taskDest select 0, getMarkerPos _taskDest select 1], 0];
-			_wp setWaypointType "MOVE";
-			_wp setWaypointStatements ["True", ""];
+			// Creating tasks for the AI
+			_grpTask = floor random 2;
+			switch (_grpTask) do{
+				// DEFEND waypoint
+				case 0:
+				{	
+					_angle = random 360;
+					_randomPlaceToSpawnWaypoint = [(getMarkerPos (_enemySpawn select _placeToSpawn) select 0) + (_distanceToSpawnWaypoint * cos _angle), (getMarkerPos (_enemySpawn select _placeToSpawn) select 1) + (_distanceToSpawnWaypoint * sin _angle)];
+					
+					[_tempGroup, _randomPlaceToSpawnWaypoint, 100, 2, true] call CBA_fnc_taskDefend;
+				};
+				
+				// PATROL
+				case 1:
+				{
+					_angle = random 360;
+					_randomPlaceToSpawnWaypoint = [(getMarkerPos (_enemySpawn select _placeToSpawn) select 0) + (_distanceToSpawnWaypoint * cos _angle), (getMarkerPos (_enemySpawn select _placeToSpawn) select 1) + (_distanceToSpawnWaypoint * sin _angle)];
+					[_tempGroup, _randomPlaceToSpawnWaypoint, 200, 15] call CBA_fnc_taskPatrol;
+				};
+				
+			
+			};
+		} else 
+		{
+			_tempGroup = [getMarkerPos _enemySpawn, resistance, _squadTypes select _squadToSpawn] Call BIS_fnc_spawnGroup;
+			_spawnedSquads set [i, _tempGroup];
+			// Creating tasks for the AI
+			_grpTask = floor random 2;
+			switch (_grpTask) do{
+				// DEFEND waypoint
+				case 0:
+				{	
+					_angle = random 360;
+					_randomPlaceToSpawnWaypoint = [(getMarkerPos (_enemySpawn) select 0) + (_distanceToSpawnWaypoint * cos _angle), (getMarkerPos (_enemySpawn) select 1) + (_distanceToSpawnWaypoint * sin _angle)];
+					
+					[_tempGroup, _randomPlaceToSpawnWaypoint, 100, 2, true] call CBA_fnc_taskDefend;
+				};
+				
+				// PATROL
+				case 1:
+				{
+					_angle = random 360;
+					_randomPlaceToSpawnWaypoint = [(getMarkerPos (_enemySpawn) select 0) + (_distanceToSpawnWaypoint * cos _angle), (getMarkerPos (_enemySpawn) select 1) + (_distanceToSpawnWaypoint * sin _angle)];
+					[_tempGroup, _randomPlaceToSpawnWaypoint, 200, 15] call CBA_fnc_taskPatrol;
+				};
+				
+			
+			};
 		};
+		
+		
+		
 	};
+	// For debugging
+	// systemChat "Spawned a enemy!";
 };
 
 
 
 
-
-	// Control structure
-	// This checks if the task is completed
+// Control structure
+// This checks if the task is completed
 	
-	// CHANGE THE STATEMENTS, TO REFLECT THE NEW TASK!
-	
-	_shallWeStillCheck = true;
-	while {_shallWeStillCheck} do {
-		if(position _objectToTransport distance2D _actualTaskPos < 10) then {
-			[_task, "Succeeded", true] spawn BIS_fnc_taskSetState;
-			_shallWeStillCheck = false;
-			doWeHaveATask = false;
-			publicVariable "doWeHaveATask";
-			tasksDone = tasksDone + 1;
-			stratMap addAction ["Open strategic map","openStrategicMap.sqf"];
-		};
-		
-		
-		sleep(20);
-		
+_shallWeStillCheck = true;
+while {_shallWeStillCheck} do {
+	// Check the distance from the object to transport, to where is shall be delivered
+	if(position _objectToTransport distance2D _actualTaskPos < 10) then {
+		[_task, "Succeeded", true] spawn BIS_fnc_taskSetState;
+		_shallWeStillCheck = false;
+		doWeHaveATask = false;
+		publicVariable "doWeHaveATask";
+		tasksDone = tasksDone + 1;
+		stratMap addAction ["Open strategic map","openStrategicMap.sqf"];
+		deleteMarker _cargoMarker;
 	};
+	
+	
+	sleep(20);
+	
+};
 
 
 
+// The mission is finished
+// Delete the units and objects!
+sleep(20);
+// Delete cargo
+deleteVehicle _objectToTransport;
+// Delete units
+[_spawnedSquads] call compile preprocessFileLineNumbers "Basic_Functions\deSpawnEnemies.sqf";
 
 
 
