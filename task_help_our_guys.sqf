@@ -47,7 +47,7 @@ _taskDest		= _this select 2;
 _taskState		= _this select 3;
 _enemySpawn 	= _this select 4;
 
-
+_spawnedSquads = [];
 
 _task = "task_" + str(tasksDone);
 
@@ -77,7 +77,13 @@ _squadTypes = [	(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" 
 				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_AT_section"),
 				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Patrol_section")];
  
- _spawnedSquads = [nrOfEnemySquadsForAssist, _enemySpawn, _squadTypes, 100, "ATTACK", _actualTaskPos] call compile preprocessFileLineNumbers "Basic_Functions\spawnEnemies.sqf";
+for "i" from 0 to nrOfEnemySquadsForAssist - 1 do 
+{
+	_tempSquad = [1, _enemySpawn, _squadTypes, 100, "ATTACK", _actualTaskPos] call compile preprocessFileLineNumbers "Basic_Functions\spawnEnemies.sqf";
+	_spawnedSquads set [i, _tempSquad];
+};
+
+systemChat str(_spawnedSquads);
  
  
  /* OUTDATED!
@@ -104,7 +110,7 @@ if(nrOfEnemySquadsForAssist > 0) then {
 };
  */
  
-
+/*
 // Create a trigger to check if task completed
 _trig = createTrigger ["EmptyDetector", _actualTaskPos];
 _trig setTriggerType "NONE";
@@ -143,42 +149,89 @@ if((triggerActivated _trig) && (triggerActivated _trig2)) then
 		publicVariable "doWeHaveATask";
 		tasksDone = tasksDone + 1;
 };	
+*/	
 	
 	
-	/*
 	
 // Control structure
 // This checks if the task is completed
 _shallWeStillCheck = true;
-while {_shallWeStillCheck} do {
+_enemySquadsAlive = [];
+
+while {_shallWeStillCheck && !(_enemySquadsAlive isEqualTo nrOfEnemySquadsForAssist)} do {
 	
 	// Check if the enemies are alive
-	for "i" from 0 to (count _spawnedSquads) do 
+	for "i" from 0 to nrOfEnemySquadsForAssist -1 do 
 	{
-		if(({alive _x} count units (_spawnedSquads select i)) < 1) then {
+		_tempGroupName = (_spawnedSquads select i) select 0;
+		
+			// For debugging
+		// systemChat format["Temp Group Name: %1, with %2 entities", _tempGroupName, count units _tempGroupName];
+		// systemChat format["GroupID: %1", groupId _tempGroupName];
+		
+		
+		/*
+		if(({alive _x} count (units _tempGroupName)) < 1) then {
+			hint format["Enemy squad %1 is dead", i];
+			// Counting the amount of dead groups
+			_enemySquadsAlive = _enemySquadsAlive + 1;
 			
 		};
+		*/
 		
+		_enemySquadsAlive set [i, {alive _x} count (units _tempGroupName)];
+		systemChat format["[enemySquadsAlive] - %1", _enemySquadsAlive select i];
 	}; // for
 	
-	// for "i" from 0 to (count _ourSquad) - 1 do 
-	// {
-		if(({alive _x} count units (_ourSquad)) < 1) then {
-			[_task, "Failed", true] spawn BIS_fnc_taskSetState;
-			_shallWeStillCheck = false;
-			doWeHaveATask = false;
-			publicVariable "doWeHaveATask";
-			tasksDone = tasksDone + 1;
-		}; // if
-	// }; // for
+	_tempValForEnemiesAlive = 0;
+	for "i" from 0 to count _enemySquadsAlive - 1 do 
+	{
+		_tempNumber = _enemySquadsAlive select i;
+		systemChat format["[tempNumber] - %1", _tempNumber];
+		_tempValForEnemiesAlive = _tempValForEnemiesAlive + _tempNumber;
+	};
+	systemChat format["tempValForEnemiesAlive: %1", _tempValForEnemiesAlive];
+	
+	if(_tempValForEnemiesAlive isEqualTo 0) then 
+	{
+		// MISSION IS OVER - ALL ENEMIES ARE DEAD
+		[_task, "SUCCEEDED", true] spawn BIS_fnc_taskSetState;
+		_shallWeStillCheck = false;
+		doWeHaveATask = false;
+		publicVariable "doWeHaveATask";
+		tasksDone = tasksDone + 1;
+	};
+	
+	
+	
+	
+	
+	
+	
+	
+	/*
+	if((_enemySquadsAlive isEqualTo nrOfEnemySquadsForAssist)) then 
+	{
+		// MISSION IS OVER - ALL ENEMIES ARE DEAD
+		[_task, "SUCCEEDED", true] spawn BIS_fnc_taskSetState;
+		_shallWeStillCheck = false;
+		doWeHaveATask = false;
+		publicVariable "doWeHaveATask";
+		tasksDone = tasksDone + 1;
+	};
+	*/
+	if(({alive _x} count units (_ourSquad)) < 1) then {
+		[_task, "Failed", true] spawn BIS_fnc_taskSetState;
+		_shallWeStillCheck = false;
+		doWeHaveATask = false;
+		publicVariable "doWeHaveATask";
+		tasksDone = tasksDone + 1;
+	}; // if
 	
 	sleep(20);
 	
 }; 
 
- 
- 
- */
  
  
  
