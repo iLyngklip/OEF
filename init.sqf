@@ -17,3 +17,7 @@ currentAssignedTask 			= 0;
 actionID	= 0;
 
 // [] spawn {call compile preprocessFileLineNumbers "EPD\Ied_Init.sqf";};
+
+
+
+execVM "R3F_LOG\init.sqf";

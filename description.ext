@@ -5,10 +5,17 @@ respawnDelay = 10;
 respawnDialog = 1;
 respawnOnStart = 0;
 
-/*
-onLoadMission = "Penis-Mission";
-loadScreen = "images/thump1.paa";
-*/
+
+// onLoadMission = "Penis-Mission";
+OnLoadName = "Operation Enduring Freedom";
+loadScreen = "images\thump1.paa";
+
+enableDebugConsole = 1;
+
+// Logistik
+#include "R3F_LOG\desc_include.h"
+// #include "logistics\config\logistics.hpp"
+
 
 
 
@@ -19,7 +26,7 @@ class Params
 	{
 		title = "Possible enemies at transport missions"; // Param name visible in the list
 		values[] = {0,1,3,5}; // Values; must be integers; has to have the same number of elements as 'texts'
-		texts[] = {"None", "One","Few","Many"}; // Description of each selectable item
+		// texts[] = {"None", "One","Few","Many"}; // Description of each selectable item
 		default = 1; // Default value; must be listed in 'values' array, otherwise 0 is used
                // Default values that are not whole numbers do not work. Param will default to 0 (or 1 if defined)
 	};
@@ -28,7 +35,7 @@ class Params
 	{
 		title = "Possible enemies at assist missions"; // Param name visible in the list
 		values[] = {0,1,3,5}; // Values; must be integers; has to have the same number of elements as 'texts'
-		texts[] = {"None", "One","Few","Many"}; // Description of each selectable item
+		// texts[] = {"None", "One","Few","Many"}; // Description of each selectable item
 		default = 1; // Default value; must be listed in 'values' array, otherwise 0 is used
                // Default values that are not whole numbers do not work. Param will default to 0 (or 1 if defined)
 	};
@@ -37,7 +44,7 @@ class Params
 	{
 		title = "Possible enemies at towing missions"; // Param name visible in the list
 		values[] = {0,1,3,5}; // Values; must be integers; has to have the same number of elements as 'texts'
-		texts[] = {"None", "One","Few","Many"}; // Description of each selectable item
+		// texts[] = {"None", "One","Few","Many"}; // Description of each selectable item
 		default = 1; // Default value; must be listed in 'values' array, otherwise 0 is used
                // Default values that are not whole numbers do not work. Param will default to 0 (or 1 if defined)
 	};
@@ -46,7 +53,7 @@ class Params
 	{
 		title = "Number of squads in AO";
 		values[] = {4, 8, 12, 16};
-		texts[] = {"Outpost", "Small base", "Large base", "Headquarters"};
+		// texts[] = {"Outpost", "Small base", "Large base", "Headquarters"};
 		default = 8;
 	};
 	
@@ -54,7 +61,7 @@ class Params
 	{
 		title = "Number of squads at IED-factory";
 		values[] = {0,1,3,5}; // Values; must be integers; has to have the same number of elements as 'texts'
-		texts[] = {"None", "One","Few","Many"}; // Description of each selectable item
+		// texts[] = {"None", "One","Few","Many"}; // Description of each selectable item
 		default = 3;
 	}
 	
