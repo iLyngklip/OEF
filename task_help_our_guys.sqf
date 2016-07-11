@@ -163,35 +163,36 @@ while {_shallWeStillCheck && !(_enemySquadsAlive isEqualTo nrOfEnemySquadsForAss
 	// Check if the enemies are alive
 	for "i" from 0 to nrOfEnemySquadsForAssist -1 do 
 	{
+		// Getting the selected group
 		_tempGroupName = (_spawnedSquads select i) select 0;
 		
-			// For debugging
-		// systemChat format["Temp Group Name: %1, with %2 entities", _tempGroupName, count units _tempGroupName];
-		// systemChat format["GroupID: %1", groupId _tempGroupName];
+					// For debugging
+				// systemChat format["Temp Group Name: %1, with %2 entities", _tempGroupName, count units _tempGroupName];
+				// systemChat format["GroupID: %1", groupId _tempGroupName];
 		
-		
-		/*
-		if(({alive _x} count (units _tempGroupName)) < 1) then {
-			hint format["Enemy squad %1 is dead", i];
-			// Counting the amount of dead groups
-			_enemySquadsAlive = _enemySquadsAlive + 1;
-			
-		};
-		*/
-		
+		// Counting how many is alive, and saving it in array
 		_enemySquadsAlive set [i, {alive _x} count (units _tempGroupName)];
+		
+		// For debugging
 		systemChat format["[enemySquadsAlive] - %1", _enemySquadsAlive select i];
 	}; // for
 	
+	
+	
+	// Determining how many of the enemy units are alive
 	_tempValForEnemiesAlive = 0;
 	for "i" from 0 to count _enemySquadsAlive - 1 do 
 	{
+		// Getting the number of alive units in the squad
 		_tempNumber = _enemySquadsAlive select i;
-		systemChat format["[tempNumber] - %1", _tempNumber];
+		
+			//systemChat format["[tempNumber] - %1", _tempNumber];
+		// And adding to pool of alive enemy units
 		_tempValForEnemiesAlive = _tempValForEnemiesAlive + _tempNumber;
 	};
-	systemChat format["tempValForEnemiesAlive: %1", _tempValForEnemiesAlive];
+	// systemChat format["tempValForEnemiesAlive: %1", _tempValForEnemiesAlive];
 	
+	// Checking if all enemies are dead, in which case mission is won
 	if(_tempValForEnemiesAlive isEqualTo 0) then 
 	{
 		// MISSION IS OVER - ALL ENEMIES ARE DEAD
@@ -204,22 +205,7 @@ while {_shallWeStillCheck && !(_enemySquadsAlive isEqualTo nrOfEnemySquadsForAss
 	
 	
 	
-	
-	
-	
-	
-	
-	/*
-	if((_enemySquadsAlive isEqualTo nrOfEnemySquadsForAssist)) then 
-	{
-		// MISSION IS OVER - ALL ENEMIES ARE DEAD
-		[_task, "SUCCEEDED", true] spawn BIS_fnc_taskSetState;
-		_shallWeStillCheck = false;
-		doWeHaveATask = false;
-		publicVariable "doWeHaveATask";
-		tasksDone = tasksDone + 1;
-	};
-	*/
+	// Checking if our guys are alive. If not, mission is lost
 	if(({alive _x} count units (_ourSquad)) < 1) then {
 		[_task, "Failed", true] spawn BIS_fnc_taskSetState;
 		_shallWeStillCheck = false;
@@ -237,7 +223,17 @@ while {_shallWeStillCheck && !(_enemySquadsAlive isEqualTo nrOfEnemySquadsForAss
  
  
  
- 
+ /*
+	if((_enemySquadsAlive isEqualTo nrOfEnemySquadsForAssist)) then 
+	{
+		// MISSION IS OVER - ALL ENEMIES ARE DEAD
+		[_task, "SUCCEEDED", true] spawn BIS_fnc_taskSetState;
+		_shallWeStillCheck = false;
+		doWeHaveATask = false;
+		publicVariable "doWeHaveATask";
+		tasksDone = tasksDone + 1;
+	};
+	*/
  
  
  
