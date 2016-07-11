@@ -42,9 +42,11 @@ if(_nrOfEnemies > 0) then {
 	{
 		_squadToSpawn = floor random 4;
 		_tempGroup = 0;
+		_placeToSpawn = floor random (count _enemySpawn);
+		
 		if(_enemySpawn isEqualType []) then 
 		{
-			_placeToSpawn = floor random (count _enemySpawn);
+			
 
 			_tempGroup = [getMarkerPos (_enemySpawn select _placeToSpawn), resistance, _squadTypes select _squadToSpawn] Call BIS_fnc_spawnGroup;
 			// systemChat format["[spawnEnemies] - _tempGroup: %1", _tempGroup];
