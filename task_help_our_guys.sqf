@@ -174,7 +174,7 @@ while {_shallWeStillCheck && !(_enemySquadsAlive isEqualTo nrOfEnemySquadsForAss
 		_enemySquadsAlive set [i, {alive _x} count (units _tempGroupName)];
 		
 		// For debugging
-		systemChat format["[enemySquadsAlive] - %1", _enemySquadsAlive select i];
+		// systemChat format["[enemySquadsAlive] - %1", _enemySquadsAlive select i];
 	}; // for
 	
 	
