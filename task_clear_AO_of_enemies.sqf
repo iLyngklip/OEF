@@ -97,7 +97,7 @@ currentAssignedTask = _task;
 _trig = createTrigger ["EmptyDetector", _zoneToDefend];
 _trig setTriggerType "NONE";
 _trig setTriggerActivation ["WEST SEIZED", "PRESENT", false];
-_trig setTriggerArea [200, 200, 0, false];
+_trig setTriggerArea [500, 500, 0, false];
 _trig setTriggerTimeout [80, 80, 80, false];
 _trig setTriggerStatements ["this", "", ""];
 
