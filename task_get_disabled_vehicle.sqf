@@ -91,7 +91,7 @@ _objectToTransport setFuel 0;
 // Spawn the enemy units!
 if(nrOfEnemySquadsForTowing > 0) then {
 	// Spawn enemies, if parameter says so
-	for "i" from 1 to nrOfEnemySquadsForTowing - 1 do
+	for "i" from 0 to nrOfEnemySquadsForTowing - 1 do
 	{
 		_squadToSpawn = floor random 4;
 		_tempGroup = 0;
@@ -288,42 +288,42 @@ switch(_switchVal) do
 */
 
 
-	// Control structure
-	// This checks if the task is completed
-	
-	// CHANGE THE STATEMENTS, TO REFLECT THE NEW TASK!
-	
-	_shallWeStillCheck = true;
-	while {_shallWeStillCheck} do {
-		if(position _objectToTransport distance2D _taskEndPos < 10) then {
-			[_task_home, "Succeeded", true] spawn BIS_fnc_taskSetState;
-			sleep(5);
-			[_task, "Succeeded", true] spawn BIS_fnc_taskSetState;
-			_shallWeStillCheck = false;
-			doWeHaveATask = false;
-			publicVariable "doWeHaveATask";
-			tasksDone = tasksDone + 1;
-			stratMap addAction ["Open strategic map","openStrategicMap.sqf"];
-		};
-		
-		
-		sleep(20);
-		
+// Control structure
+// This checks if the task is completed
+
+// CHANGE THE STATEMENTS, TO REFLECT THE NEW TASK!
+
+_shallWeStillCheck = true;
+while {_shallWeStillCheck} do {
+	if(position _objectToTransport distance2D _taskEndPos < 10) then {
+		[_task_home, "Succeeded", true] spawn BIS_fnc_taskSetState;
+		sleep(5);
+		[_task, "Succeeded", true] spawn BIS_fnc_taskSetState;
+		_shallWeStillCheck = false;
+		doWeHaveATask = false;
+		publicVariable "doWeHaveATask";
+		tasksDone = tasksDone + 1;
+		stratMap addAction ["Open strategic map","openStrategicMap.sqf"];
 	};
+	
+	
+	sleep(20);
+	
+};
 
 
-	
-	
-	sleep(120);
-	
-	// Despawn the vehicle
-	{
-		_x action ["Eject", _objectToTransport];
-	} forEach crew _objectToTransport;
-	deleteVehicle _objectToTransport;
-	
-	// Despawn the remaining enemy units
-	[_spawnedSquads] call compile preprocessFileLineNumbers "Basic_Functions\deSpawnEnemies.sqf";
+
+
+sleep(120);
+
+// Despawn the vehicle
+{
+	_x action ["Eject", _objectToTransport];
+} forEach crew _objectToTransport;
+deleteVehicle _objectToTransport;
+
+// Despawn the remaining enemy units
+[_spawnedSquads] call compile preprocessFileLineNumbers "Basic_Functions\deSpawnEnemies.sqf";
 
 
 
