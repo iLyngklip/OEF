@@ -21,3 +21,4 @@ actionID	= 0;
 
 
 execVM "R3F_LOG\init.sqf";
+onPlayerConnected {execVM "AiAnimations\setAIAnimations.sqf"};
