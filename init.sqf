@@ -22,4 +22,5 @@ actionID	= 0;
 
 execVM "R3F_LOG\init.sqf";
 // onPlayerConnected {call  "AiAnimations\setAIAnimations.sqf"};
-onPlayerConnected {["", "AiAnimations\setAIAnimations.sqf", true, true] call BIS_fnc_MP;};
+playAnimationsScript = compileFinal "AiAnimations\setAIAnimations.sqf";
+onPlayerConnected {[playAnimationsScript, BIS_fnc_call , true, true] call BIS_fnc_MP;};
