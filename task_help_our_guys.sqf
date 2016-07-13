@@ -74,8 +74,7 @@ _taskVar = [west, [_task], [_taskDescL, _taskTitle],   _actualTaskPos, _taskStat
 // Make an array with the squad types:
 _squadTypes = [	(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Support_section"),
 				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Rifle_squad"),
-				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_AT_section"),
-				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_Patrol_section")];
+				(configFile >> "CfgGroups" >> "Indep" >> "LOP_AM" >> "Infantry" >> "LOP_AM_AT_section")];
  
 for "i" from 0 to nrOfEnemySquadsForAssist - 1 do 
 {
@@ -218,8 +217,8 @@ while {_shallWeStillCheck && !(_enemySquadsAlive isEqualTo nrOfEnemySquadsForAss
 	
 }; 
 
- 
- 
+ // Despawn the enemy guys
+[_spawnedSquads] call compile preprocessFileLineNumbers "Basic_Functions\deSpawnEnemies.sqf";
  
  
  
