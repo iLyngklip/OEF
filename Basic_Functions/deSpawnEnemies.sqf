@@ -10,8 +10,11 @@
  *
  *
  *	RETURNS:
- *		Array of squads created
+ *		None
  */
+
+// [_spawnedSquads] call compile preprocessFileLineNumbers "Basic_Functions\deSpawnEnemies.sqf";
+
 
 
 // Get parameters
